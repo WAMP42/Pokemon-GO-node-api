@@ -57,14 +57,13 @@ function Pokeio() {
 
     self.playerInfo = {
         accessToken: '',
+        tokenExpireTime: 0,
         debug: true,
         latitude: 0,
         longitude: 0,
         altitude: 0,
-        locationName: '',
         provider: '',
         apiEndpoint: '',
-        tokenExpire: 0
     };
 
     self.DebugPrint = function (str) {
@@ -145,7 +144,7 @@ function Pokeio() {
                 return callback(err);
             }
             // Getting access token
-            self.GetAccessToken(username, password, function (err, token) {
+            self.GetAccessToken(username, password, function (err, session) {
                 if (err) {
                     return callback(err);
                 }
@@ -154,7 +153,7 @@ function Pokeio() {
                     if (err) {
                         return callback(err);
                     }
-                    callback(null);
+                    callback(null, session);
                 });
             });
         });
@@ -164,26 +163,26 @@ function Pokeio() {
     self.GetAccessToken = function (user, pass, callback) {
         self.DebugPrint('[i] Logging with user: ' + user);
         if (self.playerInfo.provider === 'ptc') {
-            Logins.PokemonClub(user, pass, self, function (err, token) {
+            Logins.PokemonClub(user, pass, self, function (err, session) {
                 if (err) {
                     return callback(err);
                 }
 
-                self.playerInfo.accessToken = token[0];
-                self.playerInfo.tokenExpire = token[1];
-                self.DebugPrint('[i] Received PTC access token! {Expires: ' + token[1] + '}');
-                callback(null, token[0]);
+                self.playerInfo.accessToken = session.token;
+                self.playerInfo.tokenExpireTime = session.expire_time;
+                self.DebugPrint('[i] Received PTC access token! {Expires: ' + session.expire_time + '}');
+                callback(null, session);
             });
         } else {
-            Logins.GoogleAccount(user, pass, self, function (err, token) {
+            Logins.GoogleAccount(user, pass, self, function (err, session) {
                 if (err) {
                     return callback(err);
                 }
 
-                self.playerInfo.accessToken = token[0];
-                self.playerInfo.tokenExpire = token[1];
-                self.DebugPrint('[i] Received Google access token! {Expires: ' + token[1] + '}');
-                callback(null, token[0]);
+                self.playerInfo.accessToken = session.token;
+                self.playerInfo.tokenExpireTime = session.expire_time;
+                self.DebugPrint('[i] Received Google access token! {Expires: ' + session.expire_time + '}');
+                callback(null, session);
             });
         }
     };
@@ -208,7 +207,7 @@ function Pokeio() {
             return callback(null, api_endpoint);
         });
     };
-    
+
     self.GetInventory = function(callback) {
         var req = new RequestEnvelop.Requests(4);
 
@@ -357,6 +356,9 @@ function Pokeio() {
             }
             var locationName = location.name;
             geocoder.geocode(locationName, function (err, data) {
+                if (data.status === 'OVER_QUERY_LIMIT') {
+                    return callback(new Error('query limit reached'));
+                }
                 if (err || data.status === 'ZERO_RESULTS') {
                     return callback(new Error('location not found'));
                 }
@@ -365,7 +367,6 @@ function Pokeio() {
 
                 self.playerInfo.latitude = lat;
                 self.playerInfo.longitude = lng;
-                self.playerInfo.locationName = locationName;
 
                 callback(null, self.GetLocationCoords());
             });
@@ -378,13 +379,7 @@ function Pokeio() {
             self.playerInfo.longitude = location.coords.longitude || self.playerInfo.longitude;
             self.playerInfo.altitude = location.coords.altitude || self.playerInfo.altitude;
 
-            geocoder.reverseGeocode(...GetCoords(self), function (err, data) {
-                if (data.status !== 'ZERO_RESULTS' && data.results && data.results[0]) {
-                    self.playerInfo.locationName = data.results[0].formatted_address;
-                }
-
-                callback(null, self.GetLocationCoords());
-            });
+            callback(null, self.GetLocationCoords());
         }
     };
 

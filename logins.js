@@ -21,10 +21,20 @@ module.exports = {
         self.request.get(options, function (err, response, body) {
             var data;
 
+            if (response.statusCode == 500) {
+                err = new Error('CAS is Unavailable');
+                err.statusCode = response.statusCode;
+            }
+
             if (err) {
                 return callback(err, null);
             }
-            data = JSON.parse(body);
+
+            try {
+                data = JSON.parse(body);
+            } catch (err) {
+                return callback(err, null);
+            }
 
             options = {
                 url: login_url,
@@ -49,7 +59,7 @@ module.exports = {
                 if (body) {
                     var parsedBody = JSON.parse(body);
                     if (parsedBody.errors && parsedBody.errors.length !== 0) {
-                        return callback(new Error('Error logging in: ' + parsedBody.errors[0]), null);
+                        return callback(new Error(parsedBody.errors[0]), null);
                     }
                 }
 
@@ -70,23 +80,22 @@ module.exports = {
                 };
 
                 self.request.post(options, function (err, response, body) {
-                    var token;
+                    var token, expireTime;
 
                     if(err) {
                         return callback(err, null);
                     }
 
-                    token = body.split('token=')[1];
-                    token = token.split('&')[0];
+                    body = body.split('&');
+                    token = body[0].split('token=')[1];
+                    expireTime = body[1].split('expires=')[1];
 
-                    var expiry = body.split('token=')[1].split('&expires=')[1];
-
-                    if (!token) {
+                    if (!token || !expire) {
                         return callback(new Error('Login failed'), null);
                     }
 
                     self.DebugPrint('[i] Session token: ' + token);
-                    callback(null, [token, expiry]);
+                    callback(null, {token: token, expire_time: expireTime});
                 });
 
             });
@@ -100,7 +109,7 @@ module.exports = {
                     if (err) {
                         return callback(err, null);
                     }
-                    callback(null, [data.Auth, data.Expiry]);
+                    callback(null, {token: data.Auth, expire_time: data.Expiry});
                 });
             }
             else {
