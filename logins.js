@@ -90,7 +90,7 @@ module.exports = {
                     token = body[0].split('token=')[1];
                     expireTime = body[1].split('expires=')[1];
 
-                    if (!token || !expire) {
+                    if (!token || !expireTime) {
                         return callback(new Error('Login failed'), null);
                     }
 
