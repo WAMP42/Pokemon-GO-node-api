@@ -148,7 +148,7 @@ function Pokeio() {
         if (provider.name === 'ptc' && provider.token) {
             self.DebugPrint('[i] Received PTC access token! {Expires: ' + provider.expireTime + '}');
         } else if (provider.name === 'google' && provider.token) {
-            self.DebugPrint('[i] Received Google access token! {Expires: ' + provider.expire_time + '}');
+            self.DebugPrint('[i] Received Google access token! {Expires: ' + provider.expireTime + '}');
         }
         // set provider
         self.playerInfo.provider = provider.name;
