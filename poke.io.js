@@ -132,7 +132,7 @@ function Pokeio() {
 
     }
 
-    self.init = function (username, password, location, provider, callback) {
+    self.init = function (username, location, provider, callback) {
         if (provider !== 'ptc' && provider !== 'google') {
             return callback(new Error('Invalid provider'));
         }
