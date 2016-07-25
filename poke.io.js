@@ -371,7 +371,6 @@ function Pokeio() {
     };
 
     self.SetLocation = function(location, callback) {
-        console.log(location);
         if (!location.latitude || !location.longitude) {
             return callback(new Error('Invalid location type'));
         }
