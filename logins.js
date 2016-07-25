@@ -21,7 +21,7 @@ module.exports = {
         self.request.get(options, function (err, response, body) {
             var data;
 
-            if (response.statusCode == 500) {
+            if (response && response.statusCode == 500) {
                 err = new Error('CAS is Unavailable');
                 err.statusCode = response.statusCode;
             }
