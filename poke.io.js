@@ -19,7 +19,10 @@ if (builder === null) {
 }
 
 const pokemonProto = builder.build();
-const {RequestEnvelop,ResponseEnvelop} = pokemonProto;
+const {
+    RequestEnvelop,
+    ResponseEnvelop
+} = pokemonProto;
 
 const EventEmitter = events.EventEmitter;
 
@@ -141,6 +144,12 @@ function Pokeio() {
         if (!provider.token || !provider.expireTime) {
             return callback(new Error('Invalid Token'));
         }
+
+        if (provider.name === 'ptc' && provider.token) {
+            self.DebugPrint('[i] Received PTC access token! {Expires: ' + provider.expireTime + '}');
+        } else if (provider.name === 'google' && provider.token) {
+            self.DebugPrint('[i] Received Google access token! {Expires: ' + session.expire_time + '}');
+        }
         // set provider
         self.playerInfo.provider = provider.name;
         self.playerInfo.accessToken = provider.token;
@@ -167,7 +176,6 @@ function Pokeio() {
                 if (err) {
                     return callback(err);
                 }
-
                 self.playerInfo.accessToken = session.token;
                 self.playerInfo.tokenExpireTime = session.expire_time;
                 self.DebugPrint('[i] Received PTC access token! {Expires: ' + session.expire_time + '}');
