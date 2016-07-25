@@ -164,7 +164,7 @@ function Pokeio() {
                 if (err) {
                     return callback(err);
                 }
-                callback(null, session);
+                callback(null, self.playerInfo);
             });
         });
     };
